@@ -1,7 +1,7 @@
 import { supabase } from '../lib/supabase';
 import { UserProfile, UserProgress, TrackType } from '../types';
 import { INITIAL_USER_STATE } from '../constants';
-import { AppError } from '../lib/errors';
+import { AppError, ValidationError } from '../lib/errors';
 
 // Column lists to keep selects/updates narrow
 const PROFILE_COLUMNS =
@@ -9,7 +9,38 @@ const PROFILE_COLUMNS =
 const PROGRESS_COLUMNS =
   'user_id, current_track, xp, streak, completed_lessons, badges, last_completed_at';
 
+/**
+ * Runtime validation helper for profile data
+ */
+const validateProfileData = (data: unknown): data is Record<string, unknown> => {
+  if (!data || typeof data !== 'object') return false;
+  const r = data as Record<string, unknown>;
+  return (
+    typeof r.user_id === 'string' &&
+    typeof r.display_name === 'string' &&
+    typeof r.learner_type === 'string' &&
+    typeof r.age_group === 'string'
+  );
+};
+
+/**
+ * Runtime validation helper for progress data
+ */
+const validateProgressData = (data: unknown): data is Record<string, unknown> => {
+  if (!data || typeof data !== 'object') return false;
+  const r = data as Record<string, unknown>;
+  return (
+    typeof r.user_id === 'string' &&
+    typeof r.current_track === 'string' &&
+    typeof r.xp === 'number'
+  );
+};
+
 const mapProfileRow = (row: unknown): UserProfile => {
+  if (!validateProfileData(row)) {
+    throw new ValidationError('Invalid profile data structure');
+  }
+
   const r = row as Record<string, unknown>;
   return {
     id: r.user_id as string,
@@ -28,6 +59,10 @@ const mapProfileRow = (row: unknown): UserProfile => {
 };
 
 const mapProgressRow = (row: unknown): UserProgress => {
+  if (!validateProgressData(row)) {
+    throw new ValidationError('Invalid progress data structure');
+  }
+
   const r = row as Record<string, unknown>;
   return {
     xp: (r.xp as number) ?? INITIAL_USER_STATE.xp,
@@ -39,8 +74,8 @@ const mapProgressRow = (row: unknown): UserProgress => {
 };
 
 export const fetchUserProfile = async (userId: string): Promise<UserProfile | null> => {
-  if (!userId) {
-    throw new AppError('User ID is required', 'INVALID_USER_ID');
+  if (!userId?.trim()) {
+    throw new ValidationError('User ID is required', 'userId');
   }
 
   const { data, error } = await supabase
@@ -57,12 +92,12 @@ export const fetchUserProfile = async (userId: string): Promise<UserProfile | nu
 };
 
 export const upsertUserProfile = async (userId: string, profile: UserProfile): Promise<UserProfile> => {
-  if (!userId) {
-    throw new AppError('User ID is required', 'INVALID_USER_ID');
+  if (!userId?.trim()) {
+    throw new ValidationError('User ID is required', 'userId');
   }
 
   if (!profile.name?.trim()) {
-    throw new AppError('Name is required', 'VALIDATION_ERROR');
+    throw new ValidationError('Name is required', 'name');
   }
 
   const payload = {
@@ -94,8 +129,8 @@ export const upsertUserProfile = async (userId: string, profile: UserProfile): P
 };
 
 export const fetchProgress = async (userId: string): Promise<UserProgress> => {
-  if (!userId) {
-    throw new AppError('User ID is required', 'INVALID_USER_ID');
+  if (!userId?.trim()) {
+    throw new ValidationError('User ID is required', 'userId');
   }
 
   const { data, error } = await supabase
@@ -115,8 +150,8 @@ export const upsertProgress = async (
   userId: string,
   progress: UserProgress
 ): Promise<UserProgress> => {
-  if (!userId) {
-    throw new AppError('User ID is required', 'INVALID_USER_ID');
+  if (!userId?.trim()) {
+    throw new ValidationError('User ID is required', 'userId');
   }
 
   const payload = {
@@ -147,8 +182,8 @@ export const recordLessonCompletion = async (
   lessonId: string,
   xpReward: number
 ): Promise<UserProgress> => {
-  if (!userId || !lessonId) {
-    throw new AppError('User ID and Lesson ID are required', 'INVALID_PARAMETERS');
+  if (!userId?.trim() || !lessonId?.trim()) {
+    throw new ValidationError('User ID and Lesson ID are required', 'userId,lessonId');
   }
 
   // Idempotent insert into lesson_completions
@@ -179,8 +214,8 @@ export const updateTrack = async (
   track: TrackType,
   currentProgress?: UserProgress
 ): Promise<UserProgress> => {
-  if (!userId) {
-    throw new AppError('User ID is required', 'INVALID_USER_ID');
+  if (!userId?.trim()) {
+    throw new ValidationError('User ID is required', 'userId');
   }
 
   const base = currentProgress || (await fetchProgress(userId));

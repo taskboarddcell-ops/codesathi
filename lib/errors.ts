@@ -3,13 +3,14 @@
  */
 
 export class AppError extends Error {
-  constructor(
-    message: string,
-    public code?: string,
-    public statusCode?: number
-  ) {
+  public readonly code?: string;
+  public readonly statusCode?: number;
+
+  constructor(message: string, code?: string, statusCode?: number) {
     super(message);
     this.name = 'AppError';
+    this.code = code;
+    this.statusCode = statusCode;
   }
 }
 
@@ -21,16 +22,19 @@ export class AuthError extends AppError {
 }
 
 export class NetworkError extends AppError {
-  constructor(message: string = 'Network request failed') {
+  constructor(message = 'Network request failed') {
     super(message, 'NETWORK_ERROR', 503);
     this.name = 'NetworkError';
   }
 }
 
 export class ValidationError extends AppError {
-  constructor(message: string, public field?: string) {
+  public readonly field?: string;
+
+  constructor(message: string, field?: string) {
     super(message, 'VALIDATION_ERROR', 400);
     this.name = 'ValidationError';
+    this.field = field;
   }
 }
 
