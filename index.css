@@ -1,0 +1,64 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Nunito Sans", sans-serif;
+  --font-display: "Fredoka", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+  
+  --color-brand-primary: #2F6BFF;
+  --color-brand-secondary: #FFC83D;
+  --color-brand-success: #22C55E;
+  --color-brand-error: #FF6B6B;
+  --color-brand-background: #F7F8FC;
+  --color-brand-text: #111827;
+  
+  --radius-xl: 16px;
+  --radius-lg: 14px;
+  
+  --spacing-18: 4.5rem;
+}
+
+@layer base {
+  body {
+    font-family: var(--font-sans);
+    background-color: var(--color-brand-background);
+    color: var(--color-brand-text);
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+  }
+}
+
+@layer utilities {
+  /* Custom Scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: #f1f5f9; 
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: #cbd5e1; 
+    border-radius: 4px;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8; 
+  }
+  
+  .perspective-1000 {
+    perspective: 1000px;
+  }
+  
+  .rotate-y-180 {
+    transform: rotateY(180deg);
+  }
+  
+  .backface-hidden {
+    backface-visibility: hidden;
+  }
+}

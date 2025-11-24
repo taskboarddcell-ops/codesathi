@@ -268,6 +268,7 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete, error, isSav
               onChange={(e) => setPassword(e.target.value)}
               className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:ring-2 focus:ring-brand-primary outline-none"
               placeholder="••••••••"
+              autoComplete="new-password"
             />
             <p className="text-xs text-slate-400 text-center">Minimum 8 characters recommended.</p>
           </div>
