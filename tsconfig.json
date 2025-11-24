@@ -1,1 +1,48 @@
-{"compilerOptions":{"target":"ES2022","module":"ESNext","lib":["ES2022","DOM","DOM.Iterable"],"jsx":"react-jsx","strict":true,"noImplicitAny":true,"strictNullChecks":true,"strictFunctionTypes":true,"strictBindCallApply":true,"strictPropertyInitialization":true,"noImplicitThis":true,"alwaysStrict":true,"noUnusedLocals":true,"noUnusedParameters":true,"noImplicitReturns":true,"noFallthroughCasesInSwitch":true,"noUncheckedIndexedAccess":true,"noPropertyAccessFromIndexSignature":true,"skipLibCheck":false,"moduleResolution":"bundler","isolatedModules":true,"allowJs":false,"esModuleInterop":true,"allowSyntheticDefaultImports":true,"forceConsistentCasingInFileNames":true,"moduleDetection":"force","paths":{"@/*":["./*"]},"noEmit":true},"include":["*.ts","*.tsx"],"exclude":["node_modules","dist"]}
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "jsx": "react-jsx",
+    
+    /* Strict Type Checking */
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true,
+    "strictPropertyInitialization": true,
+    "noImplicitThis": true,
+    "alwaysStrict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "noPropertyAccessFromIndexSignature": true,
+    
+    /* Module Resolution */
+    "moduleResolution": "bundler",
+    "isolatedModules": true,
+    "allowJs": false,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
+    "moduleDetection": "force",
+    "resolveJsonModule": true,
+    
+    /* Path Mapping */
+    "paths": {
+      "@/*": ["./*"]
+    },
+    
+    /* Emit */
+    "noEmit": true,
+    "skipLibCheck": true,
+    
+    /* Advanced */
+    "useDefineForClassFields": true
+  },
+  "include": ["*.ts", "*.tsx", "components/**/*.tsx", "services/**/*.ts", "lib/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
+}
