@@ -1,6 +1,7 @@
 import { supabase } from '../lib/supabase';
 import { UserProfile, UserProgress, TrackType } from '../types';
 import { INITIAL_USER_STATE } from '../constants';
+import { AppError } from '../lib/errors';
 
 // Column lists to keep selects/updates narrow
 const PROFILE_COLUMNS =
@@ -8,41 +9,62 @@ const PROFILE_COLUMNS =
 const PROGRESS_COLUMNS =
   'user_id, current_track, xp, streak, completed_lessons, badges, last_completed_at';
 
-const mapProfileRow = (row: any): UserProfile => ({
-  id: row.user_id,
-  name: row.display_name,
-  learnerType: row.learner_type,
-  ageGroup: row.age_group,
-  goals: row.goals || [],
-  experience: row.experience,
-  learningStyle: row.learning_style,
-  devices: row.devices || [],
-  timePerDay: row.time_per_day || 0,
-  parentReport: row.parent_report ?? false,
-  phoneNumber: row.phone_number || '',
-  address: row.address || '',
-});
+const mapProfileRow = (row: unknown): UserProfile => {
+  const r = row as Record<string, unknown>;
+  return {
+    id: r.user_id as string,
+    name: r.display_name as string,
+    learnerType: r.learner_type as 'myself' | 'child',
+    ageGroup: r.age_group as '7-9' | '10-12' | '13-14',
+    goals: (r.goals as string[]) || [],
+    experience: r.experience as 'none' | 'scratch' | 'code',
+    learningStyle: r.learning_style as 'visual' | 'challenges' | 'step',
+    devices: (r.devices as string[]) || [],
+    timePerDay: (r.time_per_day as number) || 0,
+    parentReport: (r.parent_report as boolean) ?? false,
+    phoneNumber: (r.phone_number as string) || '',
+    address: (r.address as string) || '',
+  };
+};
 
-const mapProgressRow = (row: any): UserProgress => ({
-  xp: row.xp ?? INITIAL_USER_STATE.xp,
-  streak: row.streak ?? INITIAL_USER_STATE.streak,
-  completedLessons: row.completed_lessons || [],
-  badges: row.badges || [],
-  currentTrack: (row.current_track as TrackType) || INITIAL_USER_STATE.currentTrack,
-});
+const mapProgressRow = (row: unknown): UserProgress => {
+  const r = row as Record<string, unknown>;
+  return {
+    xp: (r.xp as number) ?? INITIAL_USER_STATE.xp,
+    streak: (r.streak as number) ?? INITIAL_USER_STATE.streak,
+    completedLessons: (r.completed_lessons as string[]) || [],
+    badges: (r.badges as string[]) || [],
+    currentTrack: (r.current_track as TrackType) || INITIAL_USER_STATE.currentTrack,
+  };
+};
 
 export const fetchUserProfile = async (userId: string): Promise<UserProfile | null> => {
+  if (!userId) {
+    throw new AppError('User ID is required', 'INVALID_USER_ID');
+  }
+
   const { data, error } = await supabase
     .from('profiles')
     .select(PROFILE_COLUMNS)
     .eq('user_id', userId)
     .maybeSingle();
 
-  if (error) throw error;
+  if (error) {
+    throw new AppError(`Failed to fetch user profile: ${error.message}`, 'FETCH_PROFILE_ERROR');
+  }
+  
   return data ? mapProfileRow(data) : null;
 };
 
 export const upsertUserProfile = async (userId: string, profile: UserProfile): Promise<UserProfile> => {
+  if (!userId) {
+    throw new AppError('User ID is required', 'INVALID_USER_ID');
+  }
+
+  if (!profile.name?.trim()) {
+    throw new AppError('Name is required', 'VALIDATION_ERROR');
+  }
+
   const payload = {
     user_id: userId,
     display_name: profile.name,
@@ -64,18 +86,28 @@ export const upsertUserProfile = async (userId: string, profile: UserProfile): P
     .select(PROFILE_COLUMNS)
     .single();
 
-  if (error) throw error;
+  if (error) {
+    throw new AppError(`Failed to save user profile: ${error.message}`, 'UPSERT_PROFILE_ERROR');
+  }
+  
   return mapProfileRow(data);
 };
 
 export const fetchProgress = async (userId: string): Promise<UserProgress> => {
+  if (!userId) {
+    throw new AppError('User ID is required', 'INVALID_USER_ID');
+  }
+
   const { data, error } = await supabase
     .from('progress')
     .select(PROGRESS_COLUMNS)
     .eq('user_id', userId)
     .maybeSingle();
 
-  if (error) throw error;
+  if (error) {
+    throw new AppError(`Failed to fetch progress: ${error.message}`, 'FETCH_PROGRESS_ERROR');
+  }
+  
   return data ? mapProgressRow(data) : INITIAL_USER_STATE;
 };
 
@@ -83,6 +115,10 @@ export const upsertProgress = async (
   userId: string,
   progress: UserProgress
 ): Promise<UserProgress> => {
+  if (!userId) {
+    throw new AppError('User ID is required', 'INVALID_USER_ID');
+  }
+
   const payload = {
     user_id: userId,
     current_track: progress.currentTrack,
@@ -99,7 +135,10 @@ export const upsertProgress = async (
     .select(PROGRESS_COLUMNS)
     .single();
 
-  if (error) throw error;
+  if (error) {
+    throw new AppError(`Failed to update progress: ${error.message}`, 'UPSERT_PROGRESS_ERROR');
+  }
+  
   return mapProgressRow(data);
 };
 
@@ -108,10 +147,18 @@ export const recordLessonCompletion = async (
   lessonId: string,
   xpReward: number
 ): Promise<UserProgress> => {
+  if (!userId || !lessonId) {
+    throw new AppError('User ID and Lesson ID are required', 'INVALID_PARAMETERS');
+  }
+
   // Idempotent insert into lesson_completions
-  await supabase
+  const { error: completionError } = await supabase
     .from('lesson_completions')
     .upsert({ user_id: userId, lesson_id: lessonId }, { onConflict: 'user_id,lesson_id' });
+
+  if (completionError) {
+    throw new AppError(`Failed to record lesson completion: ${completionError.message}`, 'LESSON_COMPLETION_ERROR');
+  }
 
   const current = await fetchProgress(userId);
 
@@ -132,6 +179,10 @@ export const updateTrack = async (
   track: TrackType,
   currentProgress?: UserProgress
 ): Promise<UserProgress> => {
+  if (!userId) {
+    throw new AppError('User ID is required', 'INVALID_USER_ID');
+  }
+
   const base = currentProgress || (await fetchProgress(userId));
   return upsertProgress(userId, { ...base, currentTrack: track });
 };

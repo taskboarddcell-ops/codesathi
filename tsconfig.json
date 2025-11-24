@@ -43,6 +43,6 @@
     /* Advanced */
     "useDefineForClassFields": true
   },
-  "include": ["*.ts", "*.tsx", "components/**/*.tsx", "services/**/*.ts", "lib/**/*.ts"],
+  "include": ["*.ts", "*.tsx", "components/**/*.tsx", "services/**/*.ts", "lib/**/*.ts", "hooks/**/*.ts"],
   "exclude": ["node_modules", "dist"]
 }
