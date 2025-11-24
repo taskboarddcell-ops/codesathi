@@ -1,6 +1,14 @@
 import { GoogleGenAI, Chat } from "@google/genai";
 import { UserProfile } from "../types";
 
+/**
+ * Gemini AI Service for AI Tutoring
+ * 
+ * ⚠️ SECURITY NOTE: This implementation exposes the API key to the client-side.
+ * This is acceptable for development/demo but should be moved to a backend proxy
+ * before production deployment. See SECURITY.md for recommendations.
+ */
+
 // Pedagogical System Instruction
 const SYSTEM_INSTRUCTION = `
 You are Sathi, a friendly, encouraging, and safe AI coding tutor for children (ages 8-14).
@@ -18,11 +26,11 @@ let aiClient: GoogleGenAI | null = null;
 
 const getClient = () => {
   if (aiClient) return aiClient;
-  if (!process.env.API_KEY) {
-    console.warn("API_KEY is missing via process.env.API_KEY");
+  if (!process.env.GEMINI_API_KEY) {
+    console.warn("GEMINI_API_KEY is missing");
     return null;
   }
-  aiClient = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  aiClient = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
   return aiClient;
 };
 
