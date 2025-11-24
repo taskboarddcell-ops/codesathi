@@ -4,11 +4,11 @@ const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 if (!supabaseUrl) {
-  throw new Error('supabaseUrl is required. Please set VITE_SUPABASE_URL environment variable.');
+  throw new Error('VITE_SUPABASE_URL environment variable is required.');
 }
 
 if (!supabaseAnonKey) {
-  throw new Error('supabaseAnonKey is required. Please set VITE_SUPABASE_ANON_KEY environment variable.');
+  throw new Error('VITE_SUPABASE_ANON_KEY environment variable is required.');
 }
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
