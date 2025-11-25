@@ -8,8 +8,18 @@ const PROFILE_COLUMNS =
 const PROGRESS_COLUMNS =
   'user_id, current_track, xp, streak, completed_lessons, badges, last_completed_at';
 
+// Interface for Supabase error objects
+interface SupabaseError {
+  message?: string;
+  code?: string;
+  status?: number;
+  statusCode?: number;
+  details?: string;
+  hint?: string;
+}
+
 // Helper function to log and enhance Supabase errors
-const handleSupabaseError = (error: any, operation: string): never => {
+const handleSupabaseError = (error: SupabaseError, operation: string): never => {
   const errorMessage = error?.message || 'Unknown error';
   const errorCode = error?.code || 'UNKNOWN';
   const statusCode = error?.status || error?.statusCode;
