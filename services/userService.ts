@@ -8,6 +8,47 @@ const PROFILE_COLUMNS =
 const PROGRESS_COLUMNS =
   'user_id, current_track, xp, streak, completed_lessons, badges, last_completed_at';
 
+// Interface for Supabase error objects
+interface SupabaseError {
+  message?: string;
+  code?: string;
+  status?: number;
+  statusCode?: number;
+  details?: string;
+  hint?: string;
+}
+
+// Helper function to log and enhance Supabase errors
+const handleSupabaseError = (error: SupabaseError, operation: string): never => {
+  const errorMessage = error?.message || 'Unknown error';
+  const errorCode = error?.code || 'UNKNOWN';
+  const statusCode = error?.status || error?.statusCode;
+  
+  // Log detailed error information for debugging
+  console.error(`[Supabase ${operation}] Error:`, {
+    message: errorMessage,
+    code: errorCode,
+    status: statusCode,
+    details: error?.details,
+    hint: error?.hint,
+  });
+
+  // Provide user-friendly error messages based on status codes
+  if (statusCode === 401) {
+    throw new Error(
+      `Authentication failed during ${operation}. Please check your Supabase credentials and RLS policies.`
+    );
+  }
+  
+  if (statusCode === 403) {
+    throw new Error(
+      `Access denied during ${operation}. Please check RLS policies for the 'anon' role.`
+    );
+  }
+
+  throw error;
+};
+
 const mapProfileRow = (row: any): UserProfile => ({
   id: row.user_id,
   name: row.display_name,
@@ -38,7 +79,7 @@ export const fetchUserProfile = async (userId: string): Promise<UserProfile | nu
     .eq('user_id', userId)
     .maybeSingle();
 
-  if (error) throw error;
+  if (error) handleSupabaseError(error, 'fetchUserProfile');
   return data ? mapProfileRow(data) : null;
 };
 
@@ -64,7 +105,7 @@ export const upsertUserProfile = async (userId: string, profile: UserProfile): P
     .select(PROFILE_COLUMNS)
     .single();
 
-  if (error) throw error;
+  if (error) handleSupabaseError(error, 'upsertUserProfile');
   return mapProfileRow(data);
 };
 
@@ -75,7 +116,7 @@ export const fetchProgress = async (userId: string): Promise<UserProgress> => {
     .eq('user_id', userId)
     .maybeSingle();
 
-  if (error) throw error;
+  if (error) handleSupabaseError(error, 'fetchProgress');
   return data ? mapProgressRow(data) : INITIAL_USER_STATE;
 };
 
@@ -99,7 +140,7 @@ export const upsertProgress = async (
     .select(PROGRESS_COLUMNS)
     .single();
 
-  if (error) throw error;
+  if (error) handleSupabaseError(error, 'upsertProgress');
   return mapProgressRow(data);
 };
 
