@@ -87,6 +87,7 @@ export const Auth: React.FC<AuthProps> = ({ onLogin, onSignup, isLoading, error 
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
                 placeholder="••••••••"
+                autoComplete="current-password"
                 required
               />
             </div>
